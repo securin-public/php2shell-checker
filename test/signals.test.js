@@ -37,3 +37,19 @@ test("PHP-only products named in X-Powered-By", () => {
   assert.ok(sig("", [], { "x-powered-by": "Craft CMS" }).includes("Craft CMS (PHP application)"));
   assert.deepEqual(sig("", [], { "x-powered-by": "Express" }), []);
 });
+
+test("crafted pages can't make detection slow (ReDoS)", () => {
+  const N = 256 * 1024;
+  const attacks = {
+    "repeated href=": "href=".repeat(N / 5),
+    "unclosed meta generator": "<meta " + "generator ".repeat(N / 10),
+    "long path, no .php": 'href="' + "a".repeat(N),
+    "many wp- fragments": "/wp-".repeat(N / 4),
+  };
+  for (const [name, html] of Object.entries(attacks)) {
+    const t0 = performance.now();
+    detectPhpSignals({ html });
+    const ms = performance.now() - t0;
+    assert.ok(ms < 50, `${name}: ${ms.toFixed(1)} ms`);
+  }
+});
