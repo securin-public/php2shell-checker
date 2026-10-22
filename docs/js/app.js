@@ -110,6 +110,7 @@ function renderVerdict(data) {
 const SUPPORTED = Object.values(FIXED).join(", ") + " or later";
 
 function vulnReason(a) {
+  if (!a.version) return ""; // views are built for every status; only used when a version exists
   if (a.version.base === "8.6.0") return "This is a PHP 8.6.0 pre-release build from before RC4, which predates the fixes.";
   if (a.prerelease) return "This is a pre-release build of a fixed version, which predates the fix.";
   if (a.eol) return `PHP ${esc(a.branch)} is end-of-life. The PHP security team published a source backport of the CVE-2026-109618 and CVE-2026-109619 fixes for this branch, so treat it as affected.`;
@@ -117,6 +118,7 @@ function vulnReason(a) {
 }
 
 function fixAdvice(a) {
+  if (!a.version) return "";
   if (a.version.base === "8.6.0") return "update to PHP 8.6.0RC4 or later. Pre-releases are not for production, so a stable release is better.";
   if (a.fixedIn) return `upgrade to PHP ${esc(a.fixedIn)} or later.`;
   return `PHP ${esc(a.branch)} gets no official release from the PHP project. Upgrade to a supported release (${SUPPORTED}), install your OS or LTS vendor's backported package, or apply the PHP security team's source backport if you build PHP from source.`;
