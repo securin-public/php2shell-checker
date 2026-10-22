@@ -151,10 +151,10 @@ function factsHtml(rows) {
 function actionsHtml(kind) {
   if (kind === "retry") {
     return `<div class="result__actions"><button type="button" class="btn btn--sm" data-action="again">↻ Try again</button>
-      <button type="button" class="btn btn--sm btn--ghost" data-action="another">Check another site</button></div>`;
+      <button type="button" class="btn btn--sm btn--ghost" data-action="another">New scan</button></div>`;
   }
   if (kind === "verdict") {
-    return `<div class="result__actions"><button type="button" class="btn btn--sm" data-action="another">Check another site</button>
+    return `<div class="result__actions"><button type="button" class="btn btn--sm" data-action="another">New scan</button>
       <button type="button" class="btn btn--sm btn--ghost" data-action="again">↻ Check again</button></div>`;
   }
   return "";
