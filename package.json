@@ -1,0 +1,11 @@
+{
+  "name": "php2shell-checker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/",
+    "dev:site": "npx --yes http-server@14.1.1 docs -p 8080 -c-1",
+    "dev:worker": "cd worker && npx --yes wrangler@4 dev",
+    "deploy:worker": "cd worker && npx --yes wrangler@4 deploy"
+  }
+}
