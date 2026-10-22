@@ -28,8 +28,11 @@ export default {
       if (!success) return json({ error: "Too many checks — wait a minute and try again." }, 429, cors);
     }
 
-    // Count the outcome only; the target is never passed to the counter.
-    const count = (verdict) => env.STATS && ctx.waitUntil(statsStub(env).record(verdict).catch(() => {}));
+    // Count the outcome only; the target is never passed to the counter or the log.
+    const count = (verdict) => {
+      console.log(JSON.stringify({ event: "php2shell_check", verdict }));
+      if (env.STATS) ctx.waitUntil(statsStub(env).record(verdict).catch(() => {}));
+    };
 
     const raw = searchParams.get("target");
     try {
@@ -64,7 +67,7 @@ function statsStub(env) {
   return env.STATS.get(env.STATS.idFromName("global"));
 }
 
-// Aggregate counts for the stats page, behind a bearer key (STATS_KEY secret).
+// Aggregate counts for `npm run stats`, behind a bearer key (STATS_KEY secret). Not called from any web page.
 async function stats(request, env, cors) {
   const key = env.STATS_KEY || "";
   const given = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
@@ -144,7 +147,6 @@ function corsHeaders(request, env) {
   const allowed = String(env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
   const headers = {
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Authorization",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };

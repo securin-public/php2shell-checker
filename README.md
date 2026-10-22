@@ -75,10 +75,15 @@ Only check systems you own or are authorised to assess.
 
 ## Usage statistics
 
-- **Page visits:** Cloudflare Web Analytics.
-- **Checks by verdict:** a private stats page at [`/stats.html`](https://securin-public.github.io/php2shell-checker/stats.html). It needs the `STATS_KEY` secret set on the checker service and shows daily totals for the last 7, 30 or 90 days.
+Usage numbers are visible only to project maintainers. Nothing is published on the website.
 
-The counters live in a Cloudflare Durable Object and store only `(day, verdict, count)`.
+| What | Where |
+|---|---|
+| Page visits | Cloudflare dashboard → **Web Analytics** |
+| Checks by verdict, last 3 days | Cloudflare dashboard → **Workers & Pages → php2shell-checker → Observability**: filter `event = php2shell_check`, group by `verdict` |
+| Checks by verdict, all time | `STATS_KEY=<key> npm run stats`, optionally with a number of days, e.g. `npm run stats -- 90` |
+
+The checker logs only `{"event":"php2shell_check","verdict":"..."}` per check. Cloudflare's automatic request logs are disabled, so checked domains are never recorded. The all-time counters live in a Cloudflare Durable Object, which stores only `(day, verdict, count)`.
 
 ## Demo targets
 
@@ -101,6 +106,7 @@ worker/               Checker service (Cloudflare Workers)
   src/guard.js        Input validation and network safeguards
   src/stats.js        Anonymous per-day verdict counters
 demo-targets/         Static demo sites (Cloudflare Pages)
+scripts/stats.mjs     Prints usage counts (maintainers only)
 test/                 Unit tests
 ```
 
@@ -127,7 +133,7 @@ Configuration:
 - **Repository variable** `CHECKER_API_URL`: the public URL of the checker service.
 - **Repository secrets** `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`: needed for automated checker deployments.
 - `ALLOWED_ORIGINS` in `worker/wrangler.toml`: the website origins allowed to call the checker.
-- **Worker secret** `STATS_KEY` (`wrangler secret put STATS_KEY`): the access key for the stats page.
+- **Worker secret** `STATS_KEY` (`wrangler secret put STATS_KEY`): the access key for `npm run stats`.
 
 ## References
 

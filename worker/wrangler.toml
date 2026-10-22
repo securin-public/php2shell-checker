@@ -22,3 +22,11 @@ class_name = "Stats"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Stats"]
+
+# Workers Logs: keep only our own verdict log lines. Automatic invocation logs are off
+# because they would record the request URL, which contains the checked domain.
+[observability]
+enabled = true
+
+[observability.logs]
+invocation_logs = false
