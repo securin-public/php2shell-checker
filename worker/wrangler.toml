@@ -13,3 +13,12 @@ namespace_id = "1801"
   [ratelimits.simple]
   limit = 10
   period = 60
+
+# Anonymous per-day verdict counters (no domains or IPs stored).
+[[durable_objects.bindings]]
+name = "STATS"
+class_name = "Stats"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Stats"]

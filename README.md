@@ -65,13 +65,20 @@ This is a remote **version check**, not an exploit or a configuration audit:
 ## Privacy and safety
 
 - One read-only request per check. Nothing is exploited, and response bodies are discarded.
-- No targets or results are logged or stored.
+- No domains, results or IP addresses are logged or stored. The only thing kept is an anonymous daily count per verdict (vulnerable, patched, can't tell, outside range, not checked).
 - Page visits are measured with Cloudflare Web Analytics, which is anonymous and cookie-free, with no personal data and no consent banner needed.
 - Only public hosts on ports 80 and 443 can be checked. Private, loopback, link-local, cloud-metadata and other reserved addresses are refused, both as literals and after DNS resolution.
 - Redirects are limited to two, and each hop is re-validated.
 - Requests are rate-limited per visitor, and the API answers only the official page's origin.
 
 Only check systems you own or are authorised to assess.
+
+## Usage statistics
+
+- **Page visits:** Cloudflare Web Analytics.
+- **Checks by verdict:** a private stats page at [`/stats.html`](https://securin-public.github.io/php2shell-checker/stats.html). It needs the `STATS_KEY` secret set on the checker service and shows daily totals for the last 7, 30 or 90 days.
+
+The counters live in a Cloudflare Durable Object and store only `(day, verdict, count)`.
 
 ## Demo targets
 
@@ -92,6 +99,7 @@ docs/                 Public website (GitHub Pages, no build step)
 worker/               Checker service (Cloudflare Workers)
   src/index.js        GET /check?target=<domain-or-url>
   src/guard.js        Input validation and network safeguards
+  src/stats.js        Anonymous per-day verdict counters
 demo-targets/         Static demo sites (Cloudflare Pages)
 test/                 Unit tests
 ```
@@ -119,6 +127,7 @@ Configuration:
 - **Repository variable** `CHECKER_API_URL`: the public URL of the checker service.
 - **Repository secrets** `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`: needed for automated checker deployments.
 - `ALLOWED_ORIGINS` in `worker/wrangler.toml`: the website origins allowed to call the checker.
+- **Worker secret** `STATS_KEY` (`wrangler secret put STATS_KEY`): the access key for the stats page.
 
 ## References
 
