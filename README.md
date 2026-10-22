@@ -66,24 +66,12 @@ This is a remote **version check**, not an exploit or a configuration audit:
 
 - One read-only request per check. Nothing is exploited, and response bodies are discarded.
 - No domains, results or IP addresses are logged or stored. The only thing kept is an anonymous daily count per verdict (vulnerable, patched, can't tell, outside range, not checked).
-- Page visits are measured with Cloudflare Web Analytics, which is anonymous and cookie-free, with no personal data and no consent banner needed.
+- Page visits are measured with privacy-friendly analytics, which is anonymous and cookie-free, with no personal data and no consent banner needed.
 - Only public hosts on ports 80 and 443 can be checked. Private, loopback, link-local, cloud-metadata and other reserved addresses are refused, both as literals and after DNS resolution.
 - Redirects are limited to two, and each hop is re-validated.
 - Requests are rate-limited per visitor, and the API answers only the official page's origin.
 
 Only check systems you own or are authorised to assess.
-
-## Usage statistics
-
-Usage numbers are visible only to project maintainers. Nothing is published on the website.
-
-| What | Where |
-|---|---|
-| Page visits | Cloudflare dashboard → **Web Analytics** |
-| Checks by verdict, last 3 days | Cloudflare dashboard → **Workers & Pages → php2shell-checker → Observability**: filter `event = php2shell_check`, group by `verdict` |
-| Checks by verdict, all time | `STATS_KEY=<key> npm run stats`, optionally with a number of days, e.g. `npm run stats -- 90` |
-
-The checker logs only `{"event":"php2shell_check","verdict":"..."}` per check. Cloudflare's automatic request logs are disabled, so checked domains are never recorded. The all-time counters live in a Cloudflare Durable Object, which stores only `(day, verdict, count)`.
 
 ## Demo targets
 
@@ -94,18 +82,18 @@ Two static test sites let you see both verdicts without touching a real server. 
 | [php2shell-demo-vulnerable.pages.dev](https://securin-public.github.io/php2shell-checker/?target=php2shell-demo-vulnerable.pages.dev) | `PHP/8.1.2-1ubuntu2.20` | 🔴 Likely vulnerable |
 | [php2shell-demo-patched.pages.dev](https://securin-public.github.io/php2shell-checker/?target=php2shell-demo-patched.pages.dev) | `PHP/8.4.27` | 🟢 Not affected by version |
 
-Their source is in `demo-targets/`, and they are hosted on Cloudflare Pages (`npm run deploy:demo`).
+Their source is in `demo-targets/` (`npm run deploy:demo`).
 
 ## Project structure
 
 ```
 docs/                 Public website (GitHub Pages, no build step)
   js/php2shell.js     Version logic, shared by the website and the checker service
-worker/               Checker service (Cloudflare Workers)
+worker/               Checker service
   src/index.js        GET /check?target=<domain-or-url>
   src/guard.js        Input validation and network safeguards
   src/stats.js        Anonymous per-day verdict counters
-demo-targets/         Static demo sites (Cloudflare Pages)
+demo-targets/         Static demo sites
 scripts/stats.mjs     Prints usage counts (maintainers only)
 test/                 Unit tests
 ```
