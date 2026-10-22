@@ -6,6 +6,7 @@
     "test": "node --test test/",
     "dev:site": "npx --yes http-server@14.1.1 docs -p 8080 -c-1",
     "dev:worker": "cd worker && npx --yes wrangler@4 dev",
-    "deploy:worker": "cd worker && npx --yes wrangler@4 deploy"
+    "deploy:worker": "cd worker && npx --yes wrangler@4 deploy",
+    "deploy:demo": "npx --yes wrangler@4 pages deploy demo-targets/vulnerable --project-name php2shell-demo-vulnerable --branch main && npx --yes wrangler@4 pages deploy demo-targets/patched --project-name php2shell-demo-patched --branch main"
   }
 }

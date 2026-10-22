@@ -72,6 +72,17 @@ This is a remote **version check**, not an exploit or a configuration audit:
 
 Only check systems you own or are authorised to assess.
 
+## Demo targets
+
+Two static test sites let you see both verdicts without touching a real server. They only send an `X-Powered-By` header. No PHP runs on them, and there is nothing to exploit.
+
+| Site | Header sent | Expected verdict |
+|---|---|---|
+| [php2shell-demo-vulnerable.pages.dev](https://securin-public.github.io/php2shell-checker/?target=php2shell-demo-vulnerable.pages.dev) | `PHP/8.1.2-1ubuntu2.20` | 🔴 Likely vulnerable |
+| [php2shell-demo-patched.pages.dev](https://securin-public.github.io/php2shell-checker/?target=php2shell-demo-patched.pages.dev) | `PHP/8.4.27` | 🟢 Not affected by version |
+
+Their source is in `demo-targets/`, and they are hosted on Cloudflare Pages (`npm run deploy:demo`).
+
 ## Project structure
 
 ```
@@ -80,6 +91,7 @@ docs/                 Public website (GitHub Pages, no build step)
 worker/               Checker service (Cloudflare Workers)
   src/index.js        GET /check?target=<domain-or-url>
   src/guard.js        Input validation and network safeguards
+demo-targets/         Static demo sites (Cloudflare Pages)
 test/                 Unit tests
 ```
 
@@ -99,6 +111,7 @@ npm run dev:site     # website at http://localhost:8080
 |---|---|---|
 | Website | GitHub Pages | `.github/workflows/pages.yml`, runs on every push to `main` |
 | Checker service | Cloudflare Workers | `.github/workflows/worker.yml`, or `npm run deploy:worker` |
+| Demo targets | Cloudflare Pages | `npm run deploy:demo` |
 
 Configuration:
 
