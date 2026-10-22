@@ -1,5 +1,6 @@
 // PHP2Shell (CVE-2026-109618 / CVE-2026-109619) version logic.
-// Affected ranges follow the PHP security advisories GHSA-w8hw-w9fx-j79w and GHSA-6wmf-4rv5-p3rp.
+// Sources: PHP advisories GHSA-w8hw-w9fx-j79w / GHSA-6wmf-4rv5-p3rp (fixed releases) and the
+// php.net announcement of 2026-10-21 (source backports for 7.4/8.0/8.1; 8.6.0 fixed from RC4).
 // Shared by the browser page and the Cloudflare Worker, so keep it dependency-free.
 
 export const CVES = ["CVE-2026-109618", "CVE-2026-109619"];
@@ -7,10 +8,12 @@ export const CVES = ["CVE-2026-109618", "CVE-2026-109619"];
 // First fixed release per supported branch.
 export const FIXED = { "8.2": "8.2.35", "8.3": "8.3.36", "8.4": "8.4.27", "8.5": "8.5.12" };
 
+// End-of-life branches for which the PHP security team published source-only backports.
+export const SOURCE_BACKPORT_BRANCHES = ["7.4", "8.0", "8.1"];
+
 // [from inclusive, to exclusive].
 const AFFECTED_RANGES = [
-  ["5.4.0", "5.7.0"],
-  ["7.0.0", "7.5.0"],
+  ["7.4.0", "7.5.0"],
   ["8.0.0", "8.2.0"],
   ["8.2.0", "8.2.35"],
   ["8.3.0", "8.3.36"],
@@ -57,9 +60,10 @@ export function extractPhpVersion(xPoweredBy) {
 }
 
 /**
+ * "out-of-range" means end-of-life (7.3 and older): not covered by the advisory, upgrade anyway.
  * @returns {{status: "vulnerable"|"patched"|"out-of-range"|"unrecognised"|"no-php-header"|"no-header",
  *            version?: {base: string, full: string}, branch?: string, fixedIn?: string|null,
- *            prerelease?: boolean, distroBuild?: boolean}}
+ *            prerelease?: boolean, distroBuild?: boolean, eol?: boolean, sourceBackport?: boolean}}
  */
 export function assess(xPoweredBy) {
   if (!xPoweredBy) return { status: "no-header" };
@@ -77,12 +81,17 @@ export function assess(xPoweredBy) {
   );
   // A dev/alpha/beta/RC build of the exact fixed version predates the fix.
   const prereleaseOfFix = prerelease && fixedIn !== null && compareVersions(base, fixedIn) === 0;
+  // php.net: "earlier builds of PHP 8.6.0" are affected; RC4 is the first 8.6 build with the fixes.
+  const early86 = base === "8.6.0" && prerelease && !/rc(?:[4-9]|[1-9][0-9])/i.test(full);
+
+  const eol = compareVersions(base, "8.2.0") < 0;
+  const sourceBackport = SOURCE_BACKPORT_BRANCHES.includes(branch);
 
   let status;
   if (!isRealBranch(base)) status = "unrecognised";
-  else if (inRange || prereleaseOfFix) status = "vulnerable";
-  else if (compareVersions(base, "5.4.0") < 0) status = "out-of-range";
+  else if (inRange || prereleaseOfFix || early86) status = "vulnerable";
+  else if (compareVersions(base, "7.4.0") < 0) status = "out-of-range";
   else status = "patched";
 
-  return { status, version, branch, fixedIn, prerelease, distroBuild };
+  return { status, version, branch, fixedIn, prerelease, distroBuild, eol, sourceBackport };
 }

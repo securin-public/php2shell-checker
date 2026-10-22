@@ -215,3 +215,6 @@ pre code { background: none; padding: 0; }
 }
 @media (min-width: 761px) { .vtable td:nth-child(2) { white-space: nowrap; } }
 .demo a { font-weight: 600; }
+a.chip--link { text-decoration: none; border: 1px solid transparent; transition: border-color .15s, background .15s; }
+a.chip--link:hover { border-color: var(--primary); text-decoration: none; }
+a.chip--link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

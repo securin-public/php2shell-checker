@@ -20,15 +20,31 @@ test("fixed releases and later are patched", () => {
   }
 });
 
-test("EOL branches in the advisory ranges are vulnerable", () => {
-  for (const v of ["5.4.0", "5.6.40", "7.0.0", "7.4.33", "8.0.30", "8.1.31"]) {
-    assert.equal(status(`PHP/${v}`), "vulnerable", v);
+test("EOL branches with PHP source backports (7.4, 8.0, 8.1) are vulnerable", () => {
+  for (const v of ["7.4.0", "7.4.33", "8.0.30", "8.1.31"]) {
+    const r = assess(`PHP/${v}`);
+    assert.equal(r.status, "vulnerable", v);
+    assert.equal(r.eol, true, v);
+    assert.equal(r.sourceBackport, true, v);
   }
 });
 
-test("versions older than 5.4 are outside the advisory ranges", () => {
-  assert.equal(status("PHP/5.3.29"), "out-of-range");
-  assert.equal(status("PHP/5.0.0"), "out-of-range");
+test("7.3 and older are end-of-life and not covered by the advisory", () => {
+  for (const v of ["7.3.33", "7.0.0", "5.6.40", "5.4.0", "5.3.29", "5.0.0"]) {
+    assert.equal(status(`PHP/${v}`), "out-of-range", v);
+  }
+});
+
+test("PHP 8.6.0 builds before RC4 are vulnerable; RC4 and later are fixed", () => {
+  for (const v of ["8.6.0-dev", "8.6.0alpha1", "8.6.0beta3", "8.6.0RC1", "8.6.0RC3"]) {
+    assert.equal(status(`PHP/${v}`), "vulnerable", v);
+  }
+  for (const v of ["8.6.0RC4", "8.6.0RC5", "8.6.0", "8.6.1"]) assert.equal(status(`PHP/${v}`), "patched", v);
+});
+
+test("supported branches are not flagged end-of-life", () => {
+  assert.equal(assess("PHP/8.2.10").eol, false);
+  assert.equal(assess("PHP/8.2.10").sourceBackport, false);
 });
 
 test("pre-release builds of a fixed version are vulnerable", () => {

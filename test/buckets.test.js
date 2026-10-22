@@ -6,7 +6,7 @@ import { assess } from "../docs/js/php2shell.js";
 test("assessment statuses map onto stats buckets", () => {
   assert.equal(bucketFor(assess("PHP/8.1.2").status), "vulnerable");
   assert.equal(bucketFor(assess("PHP/8.4.27").status), "patched");
-  assert.equal(bucketFor(assess("PHP/5.3.29").status), "out-of-range");
+  assert.equal(bucketFor(assess("PHP/7.3.33").status), "out-of-range");
   for (const h of [null, "ASP.NET", "PHP/6.0.8"]) assert.equal(bucketFor(assess(h).status), "unknown", String(h));
 });
 

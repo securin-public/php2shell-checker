@@ -2,11 +2,11 @@
   <img src="docs/assets/securin-logo-light.png" alt="Securin" height="40">
 </p>
 
-<h1 align="center">PHP2Shell Checker</h1>
+<h1 align="center">Am I Vulnerable to PHP2Shell?</h1>
 
 <p align="center">
   Find out whether a website runs a PHP version affected by <strong>PHP2Shell</strong><br>
-  (CVE-2026-109618 / CVE-2026-109619 · Critical · CVSS 9.2)
+  (<a href="https://www.securin.io/vulnerability-database/cve/CVE-2026-109618">CVE-2026-109618</a> / <a href="https://www.securin.io/vulnerability-database/cve/CVE-2026-109619">CVE-2026-109619</a> · Critical · CVSS 9.2)
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
 
 ## What
 
-PHP2Shell is the name for two critical memory-safety vulnerabilities (use-after-free, CWE-416) in the PHP runtime. They affect PHP installations that serve web requests, whatever application or framework runs on top.
+PHP2Shell is the name researchers gave to two critical memory-safety vulnerabilities (use-after-free, CWE-416) in the PHP runtime. According to the PHP project, all PHP installations serving web requests are at risk, including PHP-FPM, Apache with mod_php, php-cgi, FrankenPHP and LiteSpeed. Risk is highest for mod_php.
 
 This project is a free, public web tool. Anyone can enter a domain and learn in seconds whether the PHP version it advertises is affected.
 
@@ -29,7 +29,7 @@ An unauthenticated attacker can send crafted requests to a vulnerable server and
 - **read sensitive memory**, such as sessions, credentials and keys, or
 - **corrupt process memory** and disrupt the service.
 
-PHP 8.1 and older are end-of-life and will not receive an upstream fix, so many servers on the internet will stay exposed. A quick, no-install check helps owners find and prioritise them.
+The PHP project states there is no complete workaround, and updating is the only safe choice. PHP 8.1 and older are end-of-life and get no official release; only source-code backports (7.4, 8.0, 8.1) or OS/LTS vendor packages are available. A quick, no-install check helps owners find and prioritise exposed servers.
 
 ## How
 
@@ -39,10 +39,10 @@ PHP 8.1 and older are end-of-life and will not receive an upstream fix, so many 
 
 | Verdict | Meaning |
 |---|---|
-| 🔴 **Likely vulnerable** | Version is in an affected range, or is a dev/alpha/beta/RC build of a fixed release |
+| 🔴 **Likely vulnerable** | 7.4 – 8.5 below the fixed release, a pre-release build of a fixed release, or a PHP 8.6.0 build before RC4 |
 | 🟢 **Not affected by version** | At or above the fixed release for its branch |
 | ⚪ **Can't tell** | No header, no PHP version, or a version that was never released |
-| 🟠 **Outside the advisory's ranges** | Older than PHP 5.4, which is end-of-life and should be upgraded anyway |
+| 🟠 **End-of-life** | PHP 7.3 or older: not covered by the advisory and no longer receiving any security fixes |
 
 ### Fixed versions
 
@@ -52,7 +52,9 @@ PHP 8.1 and older are end-of-life and will not receive an upstream fix, so many 
 | 8.4 | 8.4.27 or later |
 | 8.3 | 8.3.36 or later |
 | 8.2 | 8.2.35 or later |
-| 8.1 and older | No upstream fix. Move to a supported branch or a vendor package with both fixes backported |
+| 8.1, 8.0, 7.4 | No official release. Upgrade, use an OS/LTS vendor's backported package, or apply PHP's source backport |
+| 7.3 and older | End-of-life and not covered by the advisory. Upgrade |
+| 8.6 (pre-release) | 8.6.0RC4 or later (not for production) |
 
 ### Limitations
 
@@ -125,10 +127,12 @@ Configuration:
 
 ## References
 
+- Securin Vulnerability Database: [CVE-2026-109618](https://www.securin.io/vulnerability-database/cve/CVE-2026-109618), [CVE-2026-109619](https://www.securin.io/vulnerability-database/cve/CVE-2026-109619) ([browse the full database](https://www.securin.io/vulnerability-database/vulnerabilities?explore=all))
 - [PHP.net release announcement](https://www.php.net/index.php#2026-10-21-5)
 - [PHP security advisory GHSA-w8hw-w9fx-j79w](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w)
 - [PHP security advisory GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)
 - [Wiz research: PHP2Shell](https://www.wiz.io/blog/php2shell-php-rce)
+- [PHP supported versions](https://www.php.net/supported-versions.php) and [end-of-life branches](https://www.php.net/eol.php)
 
 ## Disclaimer
 
