@@ -77,13 +77,15 @@ function setLoading(on) {
 }
 
 function renderVerdict(data) {
-  const a = assess(data.xPoweredBy);
+  const a = assess(data.xPoweredBy, { server: data.server, phpSignals: data.phpSignals || [] });
   const facts = [
     ["Checked", data.finalUrl],
     ["HTTP status", data.httpStatus],
     ["X-Powered-By", data.xPoweredBy || "— (not sent)"],
     ["Server", data.server || "— (not sent)"],
   ];
+  if (a.version) facts.push(["Version found in", a.source === "server" ? "Server header" : "X-Powered-By header"]);
+  if (a.phpSignals?.length) facts.push(["PHP signs", a.phpSignals.join(", ")]);
   const distroNote = a.distroBuild
     ? `<p class="note">The version string <code>${esc(a.version.full)}</code> looks like an OS vendor build. Vendors often backport fixes without changing the upstream version, so check your distribution's security advisory before acting.</p>`
     : `<p class="note">This is a passive version check. OS vendor packages may contain backported fixes, so confirm against your vendor's advisory.</p>`;
@@ -109,6 +111,12 @@ function renderVerdict(data) {
       tone: "unknown", icon: "?",
       title: `Can't tell — PHP ${a.version?.full} isn't a real release`,
       body: "<p>The site advertises a PHP version that was never released, so the header is probably fake or customised.</p><p>Check the real version on the server with <code>php -v</code>.</p>",
+    },
+    "php-hidden": {
+      tone: "unknown", icon: "?",
+      title: "Runs PHP — version hidden",
+      body: `<p>This site shows signs of running PHP (${esc((a.phpSignals || []).join(", "))}), but it doesn't reveal which version.</p>
+             <p><strong>Next step:</strong> run <code>php -v</code> on the server. It's affected if it's older than the fixed release for its branch (${SUPPORTED.replace(" or later", "")}), or if it's PHP 7.4 – 8.1.</p>`,
     },
     "no-php-header": {
       tone: "unknown", icon: "?",

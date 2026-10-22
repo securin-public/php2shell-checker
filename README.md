@@ -34,14 +34,15 @@ The PHP project states there is no complete workaround, and updating is the only
 ## How
 
 1. A visitor enters a domain or URL on the page.
-2. A lightweight checker service sends **one passive `GET /`** request and returns the site's `X-Powered-By` header.
+2. A lightweight checker service sends **one passive `GET /`** request. It reads the PHP version from the `X-Powered-By` or `Server` header and looks in the same response for signs the site runs PHP (PHP session cookies, `.php` links, WordPress/Drupal/Joomla/Laravel/Magento markers).
 3. The page compares the reported PHP version with the fixed releases and shows a verdict.
 
 | Verdict | Meaning |
 |---|---|
 | 🔴 **Likely vulnerable** | 7.4 – 8.5 below the fixed release, a pre-release build of a fixed release, or a PHP 8.6.0 build before RC4 |
 | 🟢 **Not affected by version** | At or above the fixed release for its branch |
-| ⚪ **Can't tell** | No header, no PHP version, or a version that was never released |
+| ⚪ **Runs PHP, version hidden** | The site shows PHP signs but doesn't reveal its version. Check with `php -v` |
+| ⚪ **Can't tell** | No PHP version or PHP signs, or a version that was never released |
 | 🟠 **End-of-life** | PHP 7.3 or older: not covered by the advisory and no longer receiving any security fixes |
 
 ### Fixed versions
@@ -66,7 +67,7 @@ This is a remote **version check**, not an exploit or a configuration audit:
 
 ## Privacy and safety
 
-- One read-only request per check. Nothing is exploited, and response bodies are discarded.
+- One read-only request per check. Nothing is exploited. At most the first 256 KB of the home page is scanned in memory for PHP signs and then discarded.
 - No domains, results or IP addresses are logged or stored. The only thing kept is an anonymous daily count per verdict (vulnerable, patched, can't tell, outside range, not checked).
 - Page visits are measured with privacy-friendly analytics, which is anonymous and cookie-free, with no personal data and no consent banner needed.
 - Only public hosts on ports 80 and 443 can be checked. Private, loopback, link-local, cloud-metadata and other reserved addresses are refused, both as literals and after DNS resolution.

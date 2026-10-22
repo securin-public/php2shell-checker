@@ -1,12 +1,14 @@
-// PHP2Shell checker — one passive GET / per check, returns X-Powered-By and a verdict.
+// PHP2Shell checker — one passive GET / per check. Returns the PHP-related headers, PHP signals and a verdict.
 import { assess, CVES } from "../../docs/js/php2shell.js";
 import { normaliseTarget, checkUrl, isBlockedIp, InputError } from "./guard.js";
 import { bucketFor } from "./buckets.js";
+import { detectPhpSignals } from "./signals.js";
 
 export { Stats } from "./stats.js";
 
 const MAX_REDIRECTS = 2;
 const TIMEOUT_MS = 8000;
+const MAX_HTML_BYTES = 256 * 1024;
 const UA = "Securin-PHP2Shell-Checker/1.0 (+https://github.com/securin-public/php2shell-checker)";
 
 export default {
@@ -39,7 +41,7 @@ export default {
       const target = normaliseTarget(raw);
       const explicitScheme = /^https?:\/\//i.test(String(raw).trim());
       const result = await probe(target, explicitScheme);
-      const assessment = assess(result.xPoweredBy);
+      const assessment = assess(result.xPoweredBy, { server: result.server, phpSignals: result.phpSignals });
       count(bucketFor(assessment.status));
       return json(
         {
@@ -94,6 +96,7 @@ async function probe(target, explicitScheme) {
 
 async function fetchWithRedirects(start) {
   let url = start;
+  const cookies = []; // cookie names can reveal PHP even on redirect hops
   for (let hop = 0; ; hop++) {
     checkUrl(url);
     await assertPublicDns(url.hostname);
@@ -103,21 +106,48 @@ async function fetchWithRedirects(start) {
       headers: { "User-Agent": UA, Accept: "text/html,*/*;q=0.8" },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    // Headers are all we need; don't download bodies.
-    res.body?.cancel();
+    cookies.push(...(res.headers.getSetCookie?.() || []));
 
     const location = res.headers.get("Location");
     if (res.status >= 300 && res.status < 400 && location && hop < MAX_REDIRECTS) {
+      res.body?.cancel();
       url = new URL(location, url);
       continue;
     }
+    const html = await readHtmlPrefix(res);
     return {
       finalUrl: url.toString(),
       httpStatus: res.status,
       xPoweredBy: res.headers.get("X-Powered-By"),
       server: res.headers.get("Server"),
+      phpSignals: detectPhpSignals({ html, cookies, headers: { "x-generator": res.headers.get("X-Generator"), "x-powered-by": res.headers.get("X-Powered-By") } }),
     };
   }
+}
+
+// First MAX_HTML_BYTES of an HTML response, used only for PHP signal detection and then discarded.
+async function readHtmlPrefix(res) {
+  if (!res.body || !/text\/html|application\/xhtml/i.test(res.headers.get("Content-Type") || "")) {
+    res.body?.cancel();
+    return "";
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let html = "";
+  let bytes = 0;
+  try {
+    while (bytes < MAX_HTML_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      html += decoder.decode(value, { stream: true });
+    }
+  } catch {
+    // A slow or broken body still leaves us the headers; signals are best-effort.
+  } finally {
+    reader.cancel().catch(() => {});
+  }
+  return html.slice(0, MAX_HTML_BYTES);
 }
 
 // Resolve via DNS-over-HTTPS and refuse names that point at private/reserved space.

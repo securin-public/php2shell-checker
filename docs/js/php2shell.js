@@ -28,6 +28,10 @@ const PHP_TOKEN =
 const PRERELEASE =
   /^[0-9]+\.[0-9]+\.[0-9]+[-+_~.]?(?:dev|alpha[0-9]*|a[0-9]+|beta[0-9]*|b[0-9]+|rc[0-9]+)(?:[-+_~.][0-9A-Za-z._+~-]*)?$/i;
 
+// "PHP/x.y.z" anywhere in a Server header, e.g. "Apache/2.4.41 (Ubuntu) PHP/7.4.3 OpenSSL/1.1.1f".
+const SERVER_PHP_TOKEN =
+  /(?:^|[\s(])PHP\/([0-9]+\.[0-9]+\.[0-9]+)((?:[-+~_A-Za-z]|\.[A-Za-z])[0-9A-Za-z._+~-]*)?(?=[\s;,)]|$)/i;
+
 // Suffixes that usually mean an OS/LTS vendor build which may carry backported fixes.
 const DISTRO_HINT = /(ubuntu|deb|el[0-9]|\.el|amzn|suse|sury|alpine|centos|rhel|fc[0-9])/i;
 
@@ -59,16 +63,30 @@ export function extractPhpVersion(xPoweredBy) {
   return null;
 }
 
+export function extractPhpFromServer(server) {
+  const m = server ? String(server).match(SERVER_PHP_TOKEN) : null;
+  return m ? { base: m[1], full: m[1] + (m[2] || "") } : null;
+}
+
 /**
+ * "php-hidden" means the response shows PHP is in use (cookies, CMS markers, .php links) but no version.
  * "out-of-range" means end-of-life (7.3 and older): not covered by the advisory, upgrade anyway.
- * @returns {{status: "vulnerable"|"patched"|"out-of-range"|"unrecognised"|"no-php-header"|"no-header",
+ * @returns {{status: "vulnerable"|"patched"|"out-of-range"|"unrecognised"|"php-hidden"|"no-php-header"|"no-header",
  *            version?: {base: string, full: string}, branch?: string, fixedIn?: string|null,
- *            prerelease?: boolean, distroBuild?: boolean, eol?: boolean, sourceBackport?: boolean}}
+ *            prerelease?: boolean, distroBuild?: boolean, eol?: boolean, sourceBackport?: boolean,
+ *            source?: "x-powered-by"|"server", phpSignals?: string[]}}
  */
-export function assess(xPoweredBy) {
-  if (!xPoweredBy) return { status: "no-header" };
-  const version = extractPhpVersion(xPoweredBy);
-  if (!version) return { status: "no-php-header" };
+export function assess(xPoweredBy, { server = null, phpSignals = [] } = {}) {
+  let version = extractPhpVersion(xPoweredBy);
+  let source = "x-powered-by";
+  if (!version) {
+    version = extractPhpFromServer(server);
+    source = "server";
+  }
+  if (!version) {
+    if (phpSignals.length) return { status: "php-hidden", phpSignals };
+    return { status: xPoweredBy ? "no-php-header" : "no-header" };
+  }
 
   const { base, full } = version;
   const branch = base.split(".").slice(0, 2).join(".");
@@ -93,5 +111,5 @@ export function assess(xPoweredBy) {
   else if (compareVersions(base, "7.4.0") < 0) status = "out-of-range";
   else status = "patched";
 
-  return { status, version, branch, fixedIn, prerelease, distroBuild, eol, sourceBackport };
+  return { status, version, branch, fixedIn, prerelease, distroBuild, eol, sourceBackport, source, phpSignals };
 }
