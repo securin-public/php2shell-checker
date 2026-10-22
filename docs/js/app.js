@@ -17,10 +17,13 @@ function setTheme(theme) {
 toggle.addEventListener("click", () => setTheme(root.dataset.theme === "dark" ? "light" : "dark"));
 setTheme(root.dataset.theme === "dark" ? "dark" : "light");
 
+let lastTarget = "";
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const target = input.value.trim();
   if (!target) { input.focus(); return; }
+  lastTarget = target;
   if (!API_BASE) {
     render({ tone: "warn", icon: "!", title: "Checker not configured", body: "<p>The checker service URL hasn't been set for this deployment yet.</p>" });
     return;
@@ -31,12 +34,12 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch(`${API_BASE}/check?target=${encodeURIComponent(target)}`, { headers: { Accept: "application/json" } });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      render({ tone: "warn", icon: "!", title: "Couldn't check that site", body: `<p>${esc(data.error || `Checker returned HTTP ${res.status}.`)}</p>` });
+      render({ tone: "warn", icon: "!", title: "Couldn't check that site", body: `<p>${esc(data.error || `Checker returned HTTP ${res.status}.`)}</p>`, actions: "retry" });
       return;
     }
     renderVerdict(data);
   } catch {
-    render({ tone: "warn", icon: "!", title: "Checker unavailable", body: "<p>We couldn't reach the checker service. Try again in a moment.</p>" });
+    render({ tone: "warn", icon: "!", title: "Checker unavailable", body: "<p>We couldn't reach the checker service. Try again in a moment.</p>", actions: "retry" });
   } finally {
     setLoading(false);
   }
@@ -50,8 +53,25 @@ if (initial) {
   form.requestSubmit();
 }
 
+// Result-card actions: re-run the same site, or reset for a new one.
+resultEl.addEventListener("click", (e) => {
+  const action = e.target.closest("[data-action]")?.dataset.action;
+  if (action === "again") {
+    input.value = lastTarget;
+    form.requestSubmit();
+  } else if (action === "another") {
+    input.value = "";
+    resultEl.hidden = true;
+    resultEl.innerHTML = "";
+    history.replaceState(null, "", location.pathname);
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+    input.focus({ preventScroll: true });
+  }
+});
+
 function setLoading(on) {
   button.disabled = on;
+  resultEl.querySelectorAll("[data-action]").forEach((b) => (b.disabled = on));
   button.classList.toggle("is-loading", on);
   button.querySelector(".btn__label").textContent = on ? "Checking…" : "Check";
 }
@@ -104,7 +124,7 @@ function renderVerdict(data) {
 
   const v = views[a.status];
   const showNote = a.status === "vulnerable" || a.status === "patched";
-  render({ ...v, title: esc(v.title), body: v.body + factsHtml(facts) + (showNote ? distroNote : "") });
+  render({ ...v, title: esc(v.title), body: v.body + factsHtml(facts) + (showNote ? distroNote : ""), actions: "verdict" });
 }
 
 const SUPPORTED = Object.values(FIXED).join(", ") + " or later";
@@ -128,9 +148,21 @@ function factsHtml(rows) {
   return `<dl class="facts">${rows.map(([k, val]) => `<dt>${esc(k)}</dt><dd>${esc(val)}</dd>`).join("")}</dl>`;
 }
 
-function render({ tone, icon, title, body }) {
+function actionsHtml(kind) {
+  if (kind === "retry") {
+    return `<div class="result__actions"><button type="button" class="btn btn--sm" data-action="again">↻ Try again</button>
+      <button type="button" class="btn btn--sm btn--ghost" data-action="another">Check another site</button></div>`;
+  }
+  if (kind === "verdict") {
+    return `<div class="result__actions"><button type="button" class="btn btn--sm" data-action="another">Check another site</button>
+      <button type="button" class="btn btn--sm btn--ghost" data-action="again">↻ Check again</button></div>`;
+  }
+  return "";
+}
+
+function render({ tone, icon, title, body, actions }) {
   resultEl.className = `result result--${tone === "warn" ? "warn" : tone}`;
-  resultEl.innerHTML = `<div class="result__head"><span class="result__icon">${icon}</span><h2>${title}</h2></div>${body}`;
+  resultEl.innerHTML = `<div class="result__head"><span class="result__icon">${icon}</span><h2>${title}</h2></div>${body}${actionsHtml(actions)}`;
   resultEl.hidden = false;
   resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }

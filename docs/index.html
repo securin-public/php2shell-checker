@@ -177,7 +177,15 @@
   </footer>
 
   <script type="module" src="js/app.js"></script>
-  <!-- Cloudflare Web Analytics: anonymous, cookie-free visit counts -->
-  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "0a4400eb48cd4a52ba91ada0dc81d6a5"}'></script>
+  <!-- Cloudflare Web Analytics: anonymous, cookie-free visit counts. Only on the public site, so local testing isn't counted. -->
+  <script>
+    if (location.hostname === "securin-public.github.io") {
+      const s = document.createElement("script");
+      s.defer = true;
+      s.src = "https://static.cloudflareinsights.com/beacon.min.js";
+      s.dataset.cfBeacon = JSON.stringify({ token: "0a4400eb48cd4a52ba91ada0dc81d6a5" });
+      document.body.appendChild(s);
+    }
+  </script>
 </body>
 </html>
