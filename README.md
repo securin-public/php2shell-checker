@@ -65,7 +65,8 @@ This is a remote **version check**, not an exploit or a configuration audit:
 ## Privacy and safety
 
 - One read-only request per check. Nothing is exploited, and response bodies are discarded.
-- No targets, results or visitor data are logged or stored.
+- No targets or results are logged or stored.
+- Page visits are measured with Cloudflare Web Analytics, which is anonymous and cookie-free, with no personal data and no consent banner needed.
 - Only public hosts on ports 80 and 443 can be checked. Private, loopback, link-local, cloud-metadata and other reserved addresses are refused, both as literals and after DNS resolution.
 - Redirects are limited to two, and each hop is re-validated.
 - Requests are rate-limited per visitor, and the API answers only the official page's origin.

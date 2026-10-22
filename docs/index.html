@@ -109,7 +109,7 @@
           <div>
             <h3>Check</h3>
             <p>Enter a domain above. The checker sends <strong>one passive request</strong> to the site's home page and reads the PHP version it reports in the <code>X-Powered-By</code> header. It then compares that version with the fixed releases.</p>
-            <p class="muted small">Nothing is exploited, nothing is probed beyond that one request, and no targets or results are stored.</p>
+            <p class="muted small">Nothing is exploited, nothing is probed beyond that one request, and no targets or results are stored. Page visits are counted anonymously, without cookies.</p>
           </div>
         </li>
         <li class="card step">
@@ -173,5 +173,7 @@
   </footer>
 
   <script type="module" src="js/app.js"></script>
+  <!-- Cloudflare Web Analytics: anonymous, cookie-free visit counts -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "0a4400eb48cd4a52ba91ada0dc81d6a5"}'></script>
 </body>
 </html>
