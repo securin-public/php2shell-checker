@@ -86,7 +86,9 @@ function renderVerdict(data) {
   ];
   if (a.version) facts.push(["Version found in", a.source === "server" ? "Server header" : "X-Powered-By header"]);
   if (a.phpSignals?.length) facts.push(["PHP signs", a.phpSignals.join(", ")]);
-  const distroNote = a.distroBuild
+  const distroNote = a.distroFrom === "server"
+    ? `<p class="note">The Server header names <code>${esc(a.distroVendor)}</code>, so PHP is probably an OS vendor package. Vendors often backport fixes without changing the upstream version, so check your distribution's security advisory before acting.</p>`
+    : a.distroBuild
     ? `<p class="note">The version string <code>${esc(a.version.full)}</code> looks like an OS vendor build. Vendors often backport fixes without changing the upstream version, so check your distribution's security advisory before acting.</p>`
     : `<p class="note">This is a passive version check. OS vendor packages may contain backported fixes, so confirm against your vendor's advisory.</p>`;
 

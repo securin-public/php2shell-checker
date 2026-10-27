@@ -60,6 +60,21 @@ test("distro suffixes are kept and flagged", () => {
   assert.equal(r.version.full, "8.1.2-1ubuntu2.20");
   assert.equal(r.distroBuild, true);
   assert.equal(assess("PHP/8.3.36").distroBuild, false);
+  assert.equal(r.distroFrom, "version");
+});
+
+test("an OS vendor named in the Server header flags a distro build", () => {
+  const r = assess("PHP/8.3.6", { server: "Apache/2.4.58 (Ubuntu)" });
+  assert.equal(r.status, "vulnerable");
+  assert.equal(r.distroBuild, true);
+  assert.equal(r.distroFrom, "server");
+  assert.equal(r.distroVendor, "Ubuntu");
+  for (const s of ["Apache/2.4.57 (Debian)", "Apache/2.4.37 (Red Hat Enterprise Linux)", "Apache/2.4.62 (AlmaLinux)", "Apache/2.4.58 (Amazon)"]) {
+    assert.equal(assess("PHP/8.2.20", { server: s }).distroBuild, true, s);
+  }
+  for (const s of ["Apache/2.4.62 (Unix)", "nginx/1.24.0", "Apache/2.4.62 (Win64)"]) {
+    assert.equal(assess("PHP/8.2.20", { server: s }).distroBuild, false, s);
+  }
 });
 
 test("version strings from branches that were never released are unrecognised", () => {
@@ -80,8 +95,10 @@ test("comma-joined multiple X-Powered-By headers", () => {
   assert.equal(status("PHP/8.4.27, PleskLin"), "patched");
 });
 
-test("PHP token must lead the header value", () => {
+test("PHP token must lead the header value or follow a space", () => {
   assert.equal(status("NotPHP/8.2.1"), "no-php-header");
+  assert.equal(extractPhpVersion("PleskLin PHP/8.2.10").base, "8.2.10");
+  assert.equal(status("PleskLin PHP/8.2.10"), "vulnerable");
 });
 
 test("PHP version is read from the Server header when X-Powered-By lacks it", () => {

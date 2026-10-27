@@ -21,9 +21,10 @@ const AFFECTED_RANGES = [
   ["8.5.0", "8.5.12"],
 ];
 
-// Matches a leading "PHP/x.y.z" token, with an optional vendor/pre-release suffix.
+// Matches a "PHP/x.y.z" token at the start or after a space (e.g. "PleskLin PHP/8.2.10"),
+// with an optional vendor/pre-release suffix.
 const PHP_TOKEN =
-  /^PHP\/([0-9]+\.[0-9]+\.[0-9]+)((?:[-+~_A-Za-z]|\.[A-Za-z])[0-9A-Za-z._+~-]*)?(?:[ \t;,)\r]|$)/i;
+  /(?:^|\s)PHP\/([0-9]+\.[0-9]+\.[0-9]+)((?:[-+~_A-Za-z]|\.[A-Za-z])[0-9A-Za-z._+~-]*)?(?:[ \t;,)\r]|$)/i;
 
 const PRERELEASE =
   /^[0-9]+\.[0-9]+\.[0-9]+[-+_~.]?(?:dev|alpha[0-9]*|a[0-9]+|beta[0-9]*|b[0-9]+|rc[0-9]+)(?:[-+_~.][0-9A-Za-z._+~-]*)?$/i;
@@ -34,6 +35,10 @@ const SERVER_PHP_TOKEN =
 
 // Suffixes that usually mean an OS/LTS vendor build which may carry backported fixes.
 const DISTRO_HINT = /(ubuntu|deb|el[0-9]|\.el|amzn|suse|sury|alpine|centos|rhel|fc[0-9])/i;
+
+// OS vendor named by Apache in the Server header, e.g. "Apache/2.4.58 (Ubuntu)".
+const SERVER_DISTRO =
+  /\((Ubuntu|Debian|Red Hat(?: Enterprise Linux)?|CentOS|Rocky(?: Linux)?|AlmaLinux|Amazon(?: Linux)?|SUSE|openSUSE|Fedora|Oracle Linux)\b[^)]*\)/i;
 
 export function compareVersions(a, b) {
   const pa = a.split(".").map(Number);
@@ -74,6 +79,7 @@ export function extractPhpFromServer(server) {
  * @returns {{status: "vulnerable"|"patched"|"out-of-range"|"unrecognised"|"php-hidden"|"no-php-header"|"no-header",
  *            version?: {base: string, full: string}, branch?: string, fixedIn?: string|null,
  *            prerelease?: boolean, distroBuild?: boolean, eol?: boolean, sourceBackport?: boolean,
+ *            distroFrom?: "version"|"server"|null, distroVendor?: string,
  *            source?: "x-powered-by"|"server", phpSignals?: string[]}}
  */
 export function assess(xPoweredBy, { server = null, phpSignals = [] } = {}) {
@@ -92,7 +98,10 @@ export function assess(xPoweredBy, { server = null, phpSignals = [] } = {}) {
   const branch = base.split(".").slice(0, 2).join(".");
   const fixedIn = FIXED[branch] || null;
   const prerelease = PRERELEASE.test(full);
-  const distroBuild = DISTRO_HINT.test(full.slice(base.length));
+  const serverDistro = server ? String(server).match(SERVER_DISTRO) : null;
+  const distroFrom = DISTRO_HINT.test(full.slice(base.length)) ? "version" : serverDistro ? "server" : null;
+  const distroBuild = distroFrom !== null;
+  const distroVendor = distroFrom === "server" ? serverDistro[1] : undefined;
 
   const inRange = AFFECTED_RANGES.some(
     ([lo, hi]) => compareVersions(base, lo) >= 0 && compareVersions(base, hi) < 0
@@ -111,5 +120,5 @@ export function assess(xPoweredBy, { server = null, phpSignals = [] } = {}) {
   else if (compareVersions(base, "7.4.0") < 0) status = "out-of-range";
   else status = "patched";
 
-  return { status, version, branch, fixedIn, prerelease, distroBuild, eol, sourceBackport, source, phpSignals };
+  return { status, version, branch, fixedIn, prerelease, distroBuild, distroFrom, distroVendor, eol, sourceBackport, source, phpSignals };
 }
