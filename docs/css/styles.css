@@ -153,6 +153,8 @@ section.wrap { margin-bottom: 20px; }
 .ticks { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; font-size: .94rem; }
 .ticks li { padding-left: 22px; position: relative; }
 .ticks li::before { content: ""; position: absolute; left: 0; top: .55em; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); transform: rotate(45deg); }
+.changes h3 + .ticks { margin-bottom: 20px; }
+.changes .ticks:last-child { margin-bottom: 0; }
 
 .cmds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 pre { margin: 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }

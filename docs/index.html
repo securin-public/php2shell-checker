@@ -151,6 +151,23 @@
       </ol>
     </section>
 
+    <section class="wrap block" id="changes">
+      <article class="card changes">
+        <h2>What's new</h2>
+        <h3><time datetime="2026-10-27">27 October 2026</time></h3>
+        <ul class="ticks">
+          <li><strong>Vendor builds spotted from the <code>Server</code> header.</strong> When the header names an OS vendor, such as <code>Apache/2.4.58 (Ubuntu)</code>, the result now notes that PHP is probably a vendor package that may carry a backported fix. Check your vendor's advisory to confirm.</li>
+          <li><strong>More PHP versions recognised.</strong> Headers such as <code>X-Powered-By: PleskLin PHP/8.2.10</code>, where the PHP version isn't first, now give a verdict.</li>
+        </ul>
+        <h3><time datetime="2026-10-22">22 October 2026</time></h3>
+        <ul class="ticks">
+          <li><strong>PHP version read from the <code>Server</code> header</strong> as well as <code>X-Powered-By</code>.</li>
+          <li><strong>New "Runs PHP, version hidden" result.</strong> If no version is shown, the checker looks for signs the site runs PHP, such as a PHP session cookie, <code>.php</code> links or WordPress, Drupal, Joomla, Laravel or Magento markers.</li>
+          <li><strong>Checker launched.</strong></li>
+        </ul>
+      </article>
+    </section>
+
     <section class="wrap block">
       <article class="card">
         <h2>References</h2>
