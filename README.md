@@ -61,7 +61,7 @@ The PHP project states there is no complete workaround, and updating is the only
 
 This is a remote **version check**, not an exploit or a configuration audit:
 
-- OS vendors such as Debian, Ubuntu and RHEL often backport fixes without changing the version string, so confirm with your vendor's advisory.
+- OS vendors such as Debian, Ubuntu and RHEL often backport fixes without changing the version string, so confirm with your vendor's advisory. The checker flags a likely vendor build when the version string (`8.1.2-1ubuntu2.20`) or the `Server` header (`Apache/2.4.58 (Ubuntu)`) names one.
 - Many servers hide `X-Powered-By`. A hidden version is not proof of safety, so run `php -v` on the server.
 - Only the site's home page is checked.
 

@@ -118,13 +118,13 @@
             <h3>Confirm</h3>
             <p>A remote version check has limits, so confirm the result on the server itself:</p>
             <ul class="ticks">
-              <li><strong>Distro packages may already be patched.</strong> Debian, Ubuntu, RHEL and similar vendors backport fixes without changing the version number. Check your vendor's advisory.</li>
+              <li><strong>Distro packages may already be patched.</strong> Debian, Ubuntu, RHEL and similar vendors backport fixes without changing the version number. The checker flags a likely vendor build when the version string or the <code>Server</code> header names one, such as <code>Apache/2.4.58 (Ubuntu)</code>. Check your vendor's advisory.</li>
               <li><strong>A hidden version is not proof of safety.</strong> Many servers turn off <code>expose_php</code>.</li>
               <li><strong>Only the home page is checked.</strong> PHP behind another path or host won't be seen.</li>
             </ul>
             <div class="cmds">
               <div><h4>On the server</h4><pre><code>php -v</code></pre></div>
-              <div><h4>From a terminal</h4><pre><code>curl -sI https://your-site.com/ | grep -i x-powered-by</code></pre></div>
+              <div><h4>From a terminal</h4><pre><code>curl -sI https://your-site.com/ | grep -iE 'x-powered-by|^server'</code></pre></div>
             </div>
           </div>
         </li>
